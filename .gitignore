@@ -73,3 +73,4 @@ rag-backend/backend/.env.local
 rag-backend/backend/rag/storage/lightrag_storage/*/
 !rag-backend/backend/rag/storage/lightrag_storage/.gitkeep
 .git_backup/
+.git_main/

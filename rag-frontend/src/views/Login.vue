@@ -18,7 +18,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.959 8.959 0 01-4.906-1.471c-.905-.556-1.94-.808-3.094-.808-1.154 0-2.189.252-3.094.808A8.959 8.959 0 013 20c0-4.418 3.582-8 8-8s8 3.582 8 8z"/>
                     </svg>
                   </div>
-                  <span class="text-xl font-medium text-gray-900">AI Assistant</span>
+                  <span class="text-xl font-medium text-gray-900">AdaptiMultiRAG</span>
                 </div>
 
                 <h1 class="text-3xl font-normal text-gray-900 mb-2 tracking-tight">
@@ -32,7 +32,8 @@
               <!-- 表单 -->
               <form @submit.prevent="handleSubmit" class="space-y-6">
                 <!-- 用户名 (注册时) -->
-                <div v-if="!isLogin" class="space-y-2">
+                <!-- 注册功能已禁用 -->
+                <!-- <div v-if="!isLogin" class="space-y-2">
                   <label for="username" class="block text-sm font-medium text-gray-700">
                     用户名
                   </label>
@@ -44,7 +45,7 @@
                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     placeholder="请输入用户名"
                   />
-                </div>
+                </div> -->
 
                 <!-- 邮箱 -->
                 <div class="space-y-2">
@@ -103,12 +104,18 @@
               </form>
 
               <!-- 切换模式 -->
-              <div class="mt-8 text-center">
+              <!-- 注册功能已禁用，隐藏切换按钮 -->
+              <!-- <div class="mt-8 text-center">
                 <p class="text-sm text-gray-600">
                   {{ isLogin ? '还没有账户?' : '已有账户?' }}
                   <button @click="toggleMode" class="text-gray-900 hover:text-gray-700 font-medium ml-1">
                     {{ isLogin ? '注册' : '登录' }}
                   </button>
+                </p>
+              </div> -->
+              <div class="mt-8 text-center">
+                <p class="text-sm text-gray-500">
+                  注册功能已禁用，如需账户请联系管理员
                 </p>
               </div>
 
@@ -130,10 +137,10 @@
               <!-- 标题 -->
               <div>
                 <h2 class="text-2xl font-normal text-gray-900 mb-3 leading-relaxed">
-                  让每次对话<br/>都充满价值
+                  自适应多RAG智能体<br/>让科研更高效
                 </h2>
                 <p class="text-base text-gray-600 leading-relaxed">
-                  体验智能对话的全新方式
+                  双模式检索 + 智能爬虫 + 知识图谱构建
                 </p>
               </div>
 
@@ -190,7 +197,7 @@
       <!-- 底部文字 -->
       <div class="mt-8 text-center">
         <p class="text-sm text-gray-500">
-          © 2024 AI Assistant. 保留所有权利.
+          © 2024 AdaptiMultiRAG. 保留所有权利.
         </p>
       </div>
     </div>
@@ -241,7 +248,10 @@ const handleSubmit = async () => {
       result = await authStore.login(form.value.email, form.value.password)
     } else {
       // 注册时传入用户名、密码和邮箱
-      result = await authStore.register(form.value.email, form.value.password, form.value.username)
+      // 注册功能已禁用
+      // result = await authStore.register(form.value.email, form.value.password, form.value.username)
+      message.error('注册功能已禁用，请联系管理员')
+      return
     }
 
     if (result.success) {

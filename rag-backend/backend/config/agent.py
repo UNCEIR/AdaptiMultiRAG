@@ -36,11 +36,12 @@ def create_rag_graph(collection_id: str) -> RAGGraph:
         # 初始化所有模型
         chat_model, embeddings_model = initialize_models()
         
-        # 创建 RAGGraph 实例 (禁用checkpointer以支持异步流式处理)
+        # 创建 RAGGraph 实例
         rag_graph = RAGGraph(
             llm=chat_model,
             embedding_model=embeddings_model,
-            enable_checkpointer=False  # 禁用checkpoint以避免异步问题
+            enable_checkpointer=False,
+            workspace=collection_id  # 使用collection_id作为workspace
         )
         
         logger.info(f"RAGGraph 实例创建成功，collection_id={collection_id}")

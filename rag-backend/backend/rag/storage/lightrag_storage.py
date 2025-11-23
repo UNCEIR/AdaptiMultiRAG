@@ -55,12 +55,12 @@ class LightRAGStorage:
             **kwargs
         ) -> str:
             return await openai_complete_if_cache(
-                model=os.getenv("DASHSCOPE_MODEL", "qwen-max"),
+                model=os.getenv("LLM_DASHSCOPE_CHAT_MODEL", "qwen-plus"),
                 prompt=prompt,
                 system_prompt=system_prompt,
                 history_messages=history_messages,
-                api_key=os.getenv("DASHSCOPE_API_KEY"),
-                base_url=os.getenv("DASHSCOPE_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+                api_key=os.getenv("LLM_DASHSCOPE_API_KEY"),
+                base_url=os.getenv("LLM_DASHSCOPE_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
                 **kwargs
             )
         return llm_model_func
@@ -70,9 +70,9 @@ class LightRAGStorage:
         async def embedding_func(texts: List[str]) -> np.ndarray:
             return await openai_embed(
                 texts,
-                model=os.getenv("DASHSCOPE_EMBEDDING_MODEL", "text-embedding-v4"),
-                api_key=os.getenv("DASHSCOPE_API_KEY"),
-                base_url=os.getenv("DASHSCOPE_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+                model=os.getenv("VECTOR_DASHSCOPE_EMBEDDING_MODEL", "text-embedding-v4"),
+                api_key=os.getenv("VECTOR_DASHSCOPE_API_KEY"),
+                base_url=os.getenv("VECTOR_DASHSCOPE_API_BASE", "https://dashscope.aliyuncs.com/compatible-mode/v1")
             )
         return embedding_func
 

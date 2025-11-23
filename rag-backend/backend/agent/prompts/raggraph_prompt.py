@@ -30,8 +30,23 @@ class RAGGraphPrompts:
     """RAG Graph 提示词集合"""
 
     @staticmethod
+    def get_direct_answer_prompt() -> str:
+        """获取直接回答节点的提示词（简化版，不使用记忆功能）
+        
+        Returns:
+            直接回答的提示词模板
+        """
+        return """你是一个专业且友好的AI助手。请根据用户的问题提供准确、清晰的回答。
+
+用户问题：
+{question}
+
+请直接回答用户的问题，保持回答的准确性和实用性。如果问题不清楚，可以要求用户提供更多信息。
+"""
+
+    @staticmethod
     def get_direct_answer_memory_prompt() -> str:
-        """获取直接回答节点的记忆管理提示词
+        """获取直接回答节点的记忆管理提示词（已弃用）
         """
         return f"""你是一个智能助手，拥有长期记忆功能。
     回答任何问题前一定要先对记忆进行回忆。

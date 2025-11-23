@@ -12,7 +12,6 @@ from backend.param.chat import ChatRequest
 from backend.config.log import get_logger
 from backend.service import conversation as conversation_service
 from backend.service.chat_history import save_chat_message
-from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 
 logger = get_logger(__name__)
 
@@ -127,7 +126,6 @@ async def chat_stream(chat_request: ChatRequest) -> AsyncGenerator[Dict[str, Any
                 "message": "聊天服务不可用"
             }
             return
-        
         # 处理conversation_id
         session_id = chat_request.conversation_id
         
@@ -370,17 +368,6 @@ async def get_chat_history_list(user_id: str, conversation_id: Optional[str] = N
                 "message": "获取聊天历史失败"
             }
         
-        # 获取RAGGraph实例 - 使用默认collection_id
-        try:
-            rag_graph = get_rag_graph_for_collection("default_collection")
-        except Exception as e:
-            logger.error(f"创建RAGGraph实例失败: {str(e)}")
-            return {
-                "success": False,
-                "error": f"创建RAGGraph实例失败: {str(e)}",
-                "message": "获取聊天历史失败"
-            }
-        
         if conversation_id and str(conversation_id).strip():
             # 获取指定会话的历史记录
             logger.info(f"获取会话 {conversation_id} 的历史记录")
@@ -394,9 +381,8 @@ async def get_chat_history_list(user_id: str, conversation_id: Optional[str] = N
                     "message": "指定的对话不存在"
                 }
             
-            
             try:
-                # 从数据库获取聊天历史
+                # 直接从数据库获取聊天历史（不需要 RAGGraph）
                 from backend.service.chat_history import get_chat_messages
                 history_records = get_chat_messages(conversation_id)
                 
@@ -413,7 +399,6 @@ async def get_chat_history_list(user_id: str, conversation_id: Optional[str] = N
                     
                     # 如果有额外数据，添加到历史项中
                     if record.get('extra_data'):
-                        # history_item['extra_data'] = record['extra_data']
                         # 如果extra_data中有node_name，提取出来
                         if isinstance(record['extra_data'], dict) and 'node_name' in record['extra_data']:
                             history_item['node_name'] = record['extra_data']['node_name']
@@ -429,11 +414,11 @@ async def get_chat_history_list(user_id: str, conversation_id: Optional[str] = N
                     "history": history,
                     "message": f"成功获取 {len(history)} 条聊天历史"
                 }
-            except Exception as graph_error:
-                logger.error(f"获取图状态失败: {str(graph_error)}")
+            except Exception as db_error:
+                logger.error(f"从数据库获取历史失败: {str(db_error)}")
                 return {
                     "success": False,
-                    "error": f"获取会话状态失败: {str(graph_error)}",
+                    "error": f"获取会话历史失败: {str(db_error)}",
                     "message": "获取聊天历史失败"
                 }
         else:
@@ -483,11 +468,11 @@ async def get_chat_history_list(user_id: str, conversation_id: Optional[str] = N
 
 async def add_chat_history_list(user_id: str, conversation_id: str, message: Dict[str, Any]) -> Dict[str, Any]:
     """
-    添加聊天历史记录
+    添加聊天历史记录（直接保存到数据库，不使用 RAGGraph）
     
     Args:
         user_id: 用户ID
-        conversation_id: 会话ID (作为thread_id使用)
+        conversation_id: 会话ID
         message: 消息内容，格式: {"role": "user/assistant", "content": "消息内容"}
         
     Returns:
@@ -520,16 +505,6 @@ async def add_chat_history_list(user_id: str, conversation_id: str, message: Dic
                 "message": "指定的对话不存在"
             }
         
-        # 获取RAGGraph实例
-        rag_graph = get_rag_graph()
-        if not rag_graph:
-            logger.error("RAGGraph实例未初始化")
-            return {
-                "success": False,
-                "error": "RAGGraph实例未初始化",
-                "message": "添加聊天历史失败"
-            }
-        
         # 验证消息格式
         if not isinstance(message, dict) or "role" not in message or "content" not in message:
             logger.error(f"消息格式无效: {message}")
@@ -539,64 +514,30 @@ async def add_chat_history_list(user_id: str, conversation_id: str, message: Dic
                 "message": "添加聊天历史失败"
             }
         
-        # 将消息转换为LangChain消息格式
+        # 提取消息信息
         role = message.get("role", "").lower()
         content = str(message.get("content", "")).strip()
         
-        if role == "user":
-            langchain_message = HumanMessage(content=content)
-        elif role == "assistant":
-            langchain_message = AIMessage(content=content)
-        else:
+        # 验证角色
+        if role not in ["user", "assistant", "system"]:
             logger.error(f"不支持的消息角色: {role}")
             return {
                 "success": False,
-                "error": f"不支持的消息角色: {role}，仅支持user和assistant",
+                "error": f"不支持的消息角色: {role}，仅支持user、assistant和system",
                 "message": "添加聊天历史失败"
             }
         
-        # 创建RAG上下文
-        context = RAGContext(
-            session_id=conversation_id,
-            user_id=user_id
-        )
-        
-        # 获取当前状态
-        config = {"configurable": {"thread_id": conversation_id}}
-        
+        # 直接保存到数据库
         try:
-            current_state = rag_graph.graph.get_state(config)
+            save_chat_message(
+                conversation_id=conversation_id,
+                role=role,
+                message_type="messages",
+                content=content,
+                extra_data={"added_manually": True}
+            )
             
-            # 如果状态不存在，创建初始状态
-            if not current_state or not current_state.values:
-                logger.info(f"为会话 {conversation_id} 创建初始状态")
-                # 使用RAGGraph的invoke方法创建初始状态，但只传入消息
-                initial_input = {"messages": [langchain_message]}
-                
-                # 尝试导入状态创建函数
-                try:
-                    from backend.agent.states.raggraph_state import create_initial_rag_state
-                    initial_state = create_initial_rag_state(
-                        context=context,
-                        input_data=initial_input,
-                        session_id=conversation_id,
-                        user_id=user_id
-                    )
-                    # 更新状态
-                    rag_graph.graph.update_state(config, initial_state)
-                except ImportError:
-                    # 如果导入失败，使用简单的状态更新
-                    logger.warning("无法导入create_initial_rag_state，使用简单状态更新")
-                    state_update = {"messages": [langchain_message]}
-                    rag_graph.graph.update_state(config, state_update)
-                
-                logger.info(f"成功创建初始状态并添加消息: {content[:50]}...")
-            else:
-                # 状态已存在，直接添加消息
-                logger.info(f"向现有会话 {conversation_id} 添加消息")
-                state_update = {"messages": [langchain_message]}
-                rag_graph.graph.update_state(config, state_update)
-                logger.info(f"成功添加消息到现有会话: {content[:50]}...")
+            logger.info(f"成功添加消息到会话 {conversation_id}: {content[:50]}...")
             
             return {
                 "success": True,
@@ -605,15 +546,14 @@ async def add_chat_history_list(user_id: str, conversation_id: str, message: Dic
                 "message": "聊天历史添加成功",
                 "added_message": {
                     "role": role,
-                    "content": content,
-                    "timestamp": None  # 可以添加时间戳
+                    "content": content
                 }
             }
-        except Exception as graph_error:
-            logger.error(f"图状态操作失败: {str(graph_error)}")
+        except Exception as db_error:
+            logger.error(f"保存消息到数据库失败: {str(db_error)}")
             return {
                 "success": False,
-                "error": f"图状态操作失败: {str(graph_error)}",
+                "error": f"保存消息失败: {str(db_error)}",
                 "message": "添加聊天历史失败"
             }
         

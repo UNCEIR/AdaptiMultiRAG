@@ -83,9 +83,47 @@ class RAGGraph:
 
         # 只在启用checkpointer时才设置checkpoint和memory store
         if self.enable_checkpointer:
-            self._setup_postgres_services()
+            try:
+                # 创建数据库连接字符串
+                connection_string = (
+                    f"postgresql://{self.db_config['user']}:{self.db_config['password']}"
+                    f"@{self.db_config['host']}:{self.db_config['port']}/{self.db_config['database']}"
+                )
+
+                # 创建连接池
+                conn_pool = ConnectionPool(connection_string, min_size=1, max_size=5)
+                self.conn_pool = conn_pool
+
+                # 1. 设置PostgreSQL checkpoint
+                try:
+                    self.checkpointer = PostgresSaver(conn=conn_pool)
+                    self.checkpointer.setup()
+                    print(f"[RAG Graph] PostgresSaver已启用", self.checkpointer)
+                except Exception as checkpoint_error:
+                    print(f"[RAG Graph] PostgresSaver设置失败: {checkpoint_error}")
+                    self.checkpointer = None
+
+                # 2. 设置PostgreSQL memory store
+                try:
+                    self.memory_store = PostgresStore(conn=conn_pool)
+                    self.memory_store.setup()
+                    if self.memory_store:
+                        print(f"[RAG Graph] PostgresStore初始化成功", self.memory_store)
+                    else:
+                        print(f"[RAG Graph] PostgresStore初始化失败")
+                except Exception as store_error:
+                    print(f"[RAG Graph] PostgresStore设置失败: {store_error}")
+                    self.memory_store = None
+
+                print(f"[RAG Graph] PostgreSQL服务已启用: {self.db_config['host']}:{self.db_config['port']}")
+
+            except Exception as e:
+                print(f"[RAG Graph] PostgreSQL服务设置失败: {e}")
+                print("[RAG Graph] 将在无持久化模式下运行")
+                self.checkpointer = None
+                self.memory_store = None
         else:
-            print("[RAG Graph] Checkpointer和Memory Store已禁用（LangGraph Studio模式）")
+            print("[RAG Graph] Checkpointer和Memory Store已禁用")
 
         # 创建节点实例
         self.nodes = RAGNodes(
@@ -98,67 +136,6 @@ class RAGGraph:
         )
 
         self._build_graph()
-
-    def _setup_postgres_services(self) -> None:
-        """设置PostgreSQL服务：checkpoint和memory store"""
-        try:
-            
-
-            # 创建数据库连接字符串
-            connection_string = (
-                f"postgresql://{self.db_config['user']}:{self.db_config['password']}"
-                f"@{self.db_config['host']}:{self.db_config['port']}/{self.db_config['database']}"
-            )
-
-            # 创建共享连接池，设置更合理的参数
-            conn_pool = ConnectionPool(
-                connection_string, 
-                min_size=1, 
-                max_size=5,  # 减少最大连接数
-                timeout=30,  # 设置超时时间
-                max_idle=300  # 设置最大空闲时间
-            )
-
-            conn_pool.open()
-            print("数据库连接池初始化成功")
-            
-            # 保存连接池引用以便后续清理
-            self.conn_pool = conn_pool
-
-            # 1. 设置PostgreSQL checkpoint
-            try:
-                self.checkpointer = PostgresSaver(conn=conn_pool)
-                #self.checkpointer.setup()
-                print(f"[RAG Graph] PostgreSQL checkpoint已启用",self.checkpointer)
-            except Exception as checkpoint_error:
-                print(f"[RAG Graph] PostgreSQL checkpoint设置失败: {checkpoint_error}")
-                self.checkpointer = None
-
-            # 2. 设置PostgreSQL memory store
-            try:
-                self.memory_store = PostgresStore(conn=conn_pool)
-                # 初始化store表结构
-                #self.memory_store.setup()
-                #检查store是否初始化成功
-                if self.memory_store:
-                    print(f"[RAG Graph] PostgreSQL Memory Store初始化成功",self.memory_store)
-                else:
-                    print(f"[RAG Graph] PostgreSQL Memory Store初始化失败")
-
-            except Exception as store_error:
-                print(f"[RAG Graph] PostgreSQL Memory Store设置失败: {store_error}")
-                self.memory_store = None
-
-
-
-            print(f"[RAG Graph] PostgreSQL服务已启用: {self.db_config['host']}:{self.db_config['port']}")
-
-        except Exception as e:
-            print(f"[RAG Graph] PostgreSQL服务设置失败: {e}")
-            print("[RAG Graph] 将在无持久化模式下运行")
-            self.checkpointer = None
-            self.memory_store = None
-
 
     def _build_graph(self) -> None:
         """构建状态图"""

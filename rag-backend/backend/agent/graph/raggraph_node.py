@@ -404,7 +404,7 @@ class RAGNodes:
                 only_need_prompt=True
             )
 
-            self.logger.info(f"图数据库检索原始结果: {result}")
+            # self.logger.info(f"图数据库检索原始结果: {result}")
 
             # 处理检索结果,只保留Document Chunks部分
             if result and len(result.strip()) > 0:
@@ -413,7 +413,7 @@ class RAGNodes:
                 if dc_marker in result:
                     # 只保留DC标记之后的内容
                     result = result.split(dc_marker, 1)[1].strip()
-                    self.logger.info(f"提取Document Chunks后的结果: {result}")
+                    #self.logger.info(f"提取Document Chunks后的结果: {result}")
 
                 # 将检索结果转换为文档格式
                 graph_doc = RetrievedDocument(
@@ -520,7 +520,61 @@ class RAGNodes:
         return state
 
     def direct_answer_node(self, state: RAGGraphState, runtime: Runtime[RAGContext]) -> RAGGraphState:
-        """直接回答节点，集成langmem记忆管理
+        """直接回答节点（简化版，不使用记忆功能）
+
+        对于不需要检索的常规问题，直接使用LLM生成答案。
+        适用于一般性问题、闲聊、简单计算等场景。
+
+        Args:
+            state: 当前状态
+            runtime: 运行时上下文
+
+        Returns:
+            更新后的状态，包含生成的答案
+        """
+        self.logger.info("=" * 50)
+        self.logger.info("[RAG Graph] 节点: DIRECT_ANSWER - 直接回答")
+
+        # 获取最新的用户消息
+        all_messages = state.get("messages", [])
+        latest_message = all_messages[-1] if all_messages else None
+        
+        if not latest_message:
+            self.logger.warning("没有可用的消息")
+            state["final_answer"] = "抱歉，我没有收到您的问题。"
+            return state
+
+        # 获取用户问题内容
+        user_question = latest_message.content if hasattr(latest_message, 'content') else str(latest_message)
+        self.logger.info(f"用户问题: {user_question}")
+
+        try:
+            # 获取直接回答的提示词
+            prompt_template = RAGGraphPrompts.get_direct_answer_prompt()
+            prompt = prompt_template.format(question=user_question)
+
+            # 直接调用LLM生成答案
+            self.logger.info("调用LLM生成答案...")
+            answer_result = self.llm.invoke(prompt)
+            answer_content = answer_result.content
+
+            self.logger.info("答案生成成功")
+
+            # 更新状态
+            state["final_answer"] = answer_content
+            state["messages"] = [answer_result]
+
+        except Exception as e:
+            self.logger.error(f"直接回答失败: {e}")
+            error_answer = "抱歉，在生成答案时遇到了问题。请稍后重试。"
+            state["final_answer"] = error_answer
+
+        return state
+
+    # ==================== 记忆功能版本（已注释） ====================
+    """
+    def direct_answer_node_with_memory(self, state: RAGGraphState, runtime: Runtime[RAGContext]) -> RAGGraphState:
+        \"\"\"直接回答节点，集成langmem记忆管理（已弃用）
 
         对于不需要检索的常规问题，使用create_react_agent模式，
         将记忆管理工具集成到agent中，让LLM自主决定何时使用记忆功能。
@@ -532,7 +586,7 @@ class RAGNodes:
 
         Returns:
             更新后的状态，包含生成的答案
-        """
+        \"\"\"
         self.logger.info("=" * 50)
         self.logger.info("[RAG Graph] 节点: DIRECT_ANSWER - 直接回答（集成记忆管理）")
 
@@ -597,13 +651,12 @@ class RAGNodes:
             self.logger.info("React Agent回答生成成功")
 
             # 更新状态 - 只添加最新的agent消息
-            # add_messages会自动将新消息合并到现有消息列表
-            #latest_agent_message = AIMessage(content=agent_messages[-1].content)
-            latest_agent_message =agent_messages[-1]
-            state["messages"] = [latest_agent_message]  # 这会触发add_messages合并
+            latest_agent_message = agent_messages[-1]
+            state["messages"] = [latest_agent_message]
             state["final_answer"] = final_answer
 
         return state
+    """
 
     # ==================== 路由函数 ====================
 

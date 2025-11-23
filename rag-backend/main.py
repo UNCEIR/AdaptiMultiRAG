@@ -1,5 +1,10 @@
-from backend.config.log import setup_default_logging, get_logger
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+RAG Backend 主入口
+"""
 
+from backend.config.log import setup_default_logging, get_logger
 from fastapi import FastAPI
 from backend.api import rag, chat, auth, crawl, knowledge_library,visual_graph
 from dotenv import load_dotenv

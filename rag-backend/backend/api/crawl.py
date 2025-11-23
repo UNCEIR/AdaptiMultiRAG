@@ -20,7 +20,7 @@ router = APIRouter(
 def run_task(request: CrawlRequest):
     asyncio.run(initialize_collection_and_store(request))
 
-@router.post('/load-site')
+@router.post('/site')
 async def crawl_site_and_store(request: CrawlRequest) -> Response:
     """
     触发指定URL的网站爬取并存储到数据库
