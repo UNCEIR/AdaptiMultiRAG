@@ -8,6 +8,20 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-teal)
 ![LangGraph](https://img.shields.io/badge/LangGraph-0.6%2B-orange)
 
+## 🎬 演示视频
+
+[![AdaptiMultiRAG 演示视频](https://img.shields.io/badge/▶️-观看演示视频-red?style=for-the-badge)](./AIC-2025-87935724-场景创新-AdaptiMultiRAG-演示视频.mp4)
+
+> 📹 **演示视频**: [AIC-2025-87935724-场景创新-AdaptiMultiRAG-演示视频.mp4](./AIC-2025-87935724-场景创新-AdaptiMultiRAG-演示视频.mp4)
+>
+> 视频展示了 AdaptiMultiRAG 系统的核心功能,包括:
+>
+> - 智能对话与 RAG 检索
+> - 知识库管理与文档上传
+> - Agent 流程可视化
+> - 知识图谱展示
+> - 自适应检索策略切换
+
 ## ✨ 核心特性
 
 AdaptiMultiRAG 是一个企业级的自适应多RAG智能体系统,具备以下创新功能:
@@ -25,6 +39,7 @@ AdaptiMultiRAG 是一个企业级的自适应多RAG智能体系统,具备以下�
 ## 🏗️ 技术架构
 
 ### 后端技术栈
+
 - **Web框架**: FastAPI 0.115+ + uvicorn (高性能异步框架)
 - **智能体框架**: LangGraph 0.6+ (工作流编排) + LangChain 0.3+ + langmem (记忆管理)
 - **智能爬虫**: Crawl4AI (AI驱动的网页爬取,支持动态渲染和结构化提取)
@@ -37,6 +52,7 @@ AdaptiMultiRAG 是一个企业级的自适应多RAG智能体系统,具备以下�
 - **包管理**: uv (Python >= 3.12)
 
 ### 前端技术栈
+
 - **框架**: Vue 3.5+ (Composition API)
 - **构建工具**: Vite 7.x
 - **UI组件**: Element Plus + 自定义组件
@@ -51,16 +67,19 @@ AdaptiMultiRAG 是一个企业级的自适应多RAG智能体系统,具备以下�
 AdaptiMultiRAG 专为以下场景设计:
 
 ### 科研辅助
+
 - 📖 **文献综述生成**: 自动从arXiv爬取论文,生成结构化综述
 - 🔬 **研究方法查询**: 快速找到相关研究方法和实验流程
 - 📊 **实验流程指导**: 基于已有文献提供实验设计建议
 
 ### 技术开发
+
 - 📚 **API文档检索**: 智能检索GitHub文档和官方API参考
 - 💻 **代码库问答**: 理解开源项目架构和技术实现
 - 🛠️ **技术选型建议**: 基于知识图谱分析技术关联和对比
 
 ### 企业知识管理
+
 - 📝 **技术文档检索**: 快速查找企业内部技术文档和规范
 - ❓ **FAQ智能问答**: 自动回答常见技术问题
 - 🏢 **知识沉淀**: 建立企业技术知识库,支持知识传承
@@ -118,6 +137,7 @@ JWT_SECRET_KEY=your_jwt_secret_key_here
 #### 2.2 数据库初始化
 
 **MySQL 数据库**:
+
 ```bash
 # 1. 创建 MySQL 数据库
 mysql -u root -p
@@ -139,6 +159,7 @@ docker-compose up -d
 ```
 
 验证 Milvus 已启动:
+
 ```bash
 docker-compose ps
 ```
@@ -152,10 +173,11 @@ python main.py
 ```
 
 **后端服务地址**:
-- API 服务: http://0.0.0.0:8000
-- API 文档: http://0.0.0.0:8000/docs
+
+- API 服务: <http://0.0.0.0:8000>
+- API 文档: <http://0.0.0.0:8000/docs>
 - Milvus: 端口 19530
-- MinIO 控制台: http://localhost:9001 (minioadmin/minioadmin)
+- MinIO 控制台: <http://localhost:9001> (minioadmin/minioadmin)
 
 ### 3. 前端启动
 
@@ -165,45 +187,52 @@ npm install
 npm run dev
 ```
 
-**前端访问地址**: http://localhost:5173
+**前端访问地址**: <http://localhost:5173>
 
 ## 📖 核心功能
 
 ### 1. 智能对话
+
 - 基于 LangGraph 的 RAG 智能体
 - 支持流式和非流式响应
 - 自动选择检索策略
 - 问题扩展和子问题生成
 
 ### 2. 知识库管理
+
 - 支持 PDF、DOCX 文档上传
 - 网页爬取功能
 - 文档自动切块
 - 向量化存储
 
 ### 3. 双模式检索
+
 - **向量检索**: 使用 Milvus 进行语义检索
 - **图检索**: 使用 LightRAG 进行知识图谱检索
 - **智能选择**: 根据问题类型自动选择最佳检索方式
 - 检索结果合并和重排序
 
 ### 4. 知识图谱可视化
+
 - 基于 ECharts 的实体关系图
 - 节点和关系交互展示
 - 支持缩放、拖拽、筛选
 - 美观的类纸化设计
 
 ### 5. 记忆管理
+
 - 基于 langmem 的长期记忆
 - 会话历史管理
 - 上下文保持
 
 ### 6. 用户认证
+
 - JWT 双 token 机制 (access + refresh)
 - 安全的密码哈希
 - Token 自动刷新
 
 ### 7. Agent 架构可视化
+
 - 实时显示 Agent 执行流程
 - Mermaid 流程图展示
 - 节点高亮动画
@@ -255,6 +284,7 @@ rag-demo/
 ## 🧪 测试
 
 ### 后端测试
+
 ```bash
 cd rag-backend
 uv run pytest backend/tests/              # 运行所有测试
@@ -263,6 +293,7 @@ uv run pytest backend/tests/test_raggraph_simple.py -v    # 运行特定测试
 ```
 
 ### 前端构建
+
 ```bash
 cd rag-frontend
 npm run build                             # 构建生产版本
@@ -274,6 +305,7 @@ npm run preview                           # 预览构建结果
 ### 1. 数据库连接失败
 
 **检查清单**:
+
 - MySQL 和 PostgreSQL 服务是否已启动
 - `.env` 文件中的数据库连接配置是否正确
 - 数据库用户是否有足够的权限
@@ -298,6 +330,7 @@ docker-compose restart
 **原因**: Vite 代理配置不完整
 
 **解决**: 确保 `rag-frontend/vite.config.js` 中配置了所有后端路径:
+
 ```javascript
 proxy: {
   '/api': { target: 'http://localhost:8000' },
@@ -311,6 +344,7 @@ proxy: {
 ### 4. API 密钥问题
 
 如果遇到 API 调用失败,检查:
+
 - `DASHSCOPE_API_KEY` 是否正确
 - 是否有足够的 API 调用额度
 - 网络是否能访问阿里云服务
@@ -362,6 +396,7 @@ proxy: {
 ### 提交规范
 
 使用语义化提交信息:
+
 - `feat:` 新功能
 - `fix:` 修复 bug
 - `docs:` 文档更新
